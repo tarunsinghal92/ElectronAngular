@@ -1,14 +1,7 @@
 (function () {
-    'use strict';
-    var mysql = require('mysql');
-    
-    // Creates MySql database connection
-    var connection = mysql.createConnection({
-        host: "localhost",
-        user: "root",
-        password: "password",
-        database: "customer_manager"
-    });
+     'use strict';
+    var Nedb = require('nedb');
+    var customers = new Nedb({ filename: './db/customers.db', autoload: true });
     
     angular.module('app')
         .service('customerService', ['$q', CustomerService]);
@@ -25,65 +18,56 @@
         
         function getCustomers() {
             var deferred = $q.defer();
-            var query = "SELECT * FROM customers";
-            connection.query(query, function (err, rows) {
+            customers.find({}, function (err, rows) {
                 if (err) deferred.reject(err);
                 deferred.resolve(rows);
-            });
-            return deferred.promise;
+            });      
+            return deferred.promise;      
         }
         
         function getCustomerById(id) {
             var deferred = $q.defer();
-            var query = "SELECT * FROM customers WHERE customer_id = ?";
-            connection.query(query, [id], function (err, rows) {
+            customers.find({'_id': id }, function (err, result) {
                 if (err) deferred.reject(err);
-                deferred.resolve(rows);
-            });
+                deferred.resolve(result);
+            });       
             return deferred.promise;
         }
         
         function getCustomerByName(name) {
             var deferred = $q.defer();
-            var query = "SELECT * FROM customers WHERE name LIKE  '" + name + "%'";
-            connection.query(query, [name], function (err, rows) {
+            customers.find({'name': name }, function (err, result) {
+                if (err) deferred.reject(err);
+                deferred.resolve(result);
+            });  
+            return deferred.promise;
+        }
+        
+        function createCustomer(customer) {          
+            var deferred = $q.defer();
+            customers.insert(customer, function (err, result) {
                 console.log(err)
                 if (err) deferred.reject(err);
-                
-                deferred.resolve(rows);
+                deferred.resolve(result);
             });
             return deferred.promise;
         }
         
-        function createCustomer(customer) {
+        function deleteCustomer(id) {            
             var deferred = $q.defer();
-            var query = "INSERT INTO customers SET ?";
-            connection.query(query, customer, function (err, res) {
-                console.log(err)
-                if (err) deferred.reject(err);
-                console.log(res)
-                deferred.resolve(res.insertId);
-            });
-            return deferred.promise;
-        }
-        
-        function deleteCustomer(id) {
-            var deferred = $q.defer();
-            var query = "DELETE FROM customers WHERE customer_id = ?";
-            connection.query(query, [id], function (err, res) {
+            customers.remove({'_id': id}, function (err, res) {
                 if (err) deferred.reject(err);
                 console.log(res);
                 deferred.resolve(res.affectedRows);
-            });
+            });                
             return deferred.promise;
         }
         
         function updateCustomer(customer) {
             var deferred = $q.defer();
-            var query = "UPDATE customers SET name = ? WHERE customer_id = ?";
-            connection.query(query, [customer.name, customer.customer_id], function (err, res) {
+            customers.update({_id: customer._id}, customer, {}, function (err, numReplaced) {
                 if (err) deferred.reject(err);
-                deferred.resolve(res);
+                deferred.resolve(numReplaced);
             });
             return deferred.promise;
         }
