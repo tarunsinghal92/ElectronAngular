@@ -1,6 +1,7 @@
 # ElectronAngular
 
-This sample application demonstrate how to create a desktop application using Angular JS and Github Electron.
+This sample application demonstrate how to create a desktop application using Angular JS and Github Electron. 
+This sample uses NeDB.  Make sure you create a sub-directory 'db' under ElectronAngular folder.
 
 
 
